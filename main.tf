@@ -81,7 +81,7 @@ resource "azurerm_network_interface" "az_nic" {
 
 
   ip_configuration {
-    name                          = "az_nic"
+    name                          = "az_nic_configuration"
     subnet_id                     = azurerm_subnet.az_subnet.id
     private_ip_address_allocation = "Dynamic"
     public_ip_address_id           = azurerm_public_ip.az_public_ip[count.index].id
@@ -94,16 +94,6 @@ resource "azurerm_network_interface_security_group_association" "az_nsg_security
   count = 3
   network_interface_id      = azurerm_network_interface.az_nic[count.index].id
   network_security_group_id = azurerm_network_security_group.az_nsg.id
-}
-
-
-# Create storage account for boot diagnostics
-resource "azurerm_storage_account" "az_storage_account" {
-  name                     = "azstacc${random_id.random_id.hex}"
-  location            = azurerm_resource_group.main.location
-  resource_group_name = azurerm_resource_group.main.name
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
 }
 
 
@@ -132,11 +122,6 @@ resource "azurerm_windows_virtual_machine" "az_virtual_machine" {
     offer     = "WindowsServer"
     sku       = "2022-datacenter-azure-edition"
     version   = "latest"
-  }
-
-
-  boot_diagnostics {
-    storage_account_uri = azurerm_storage_account.az_storage_account.primary_blob_endpoint
   }
 }
 
@@ -201,29 +186,3 @@ resource "azurerm_lb_rule" "az_lb_rule" {
   backend_port =  "80"
 }
 
-# Generate random text for a unique storage account name
-resource "random_id" "random_id" {
-  keepers = {
-    # Generate a new ID only when a new resource group is defined
-    resource_group = azurerm_resource_group.main.name
-  }
-
-
-  byte_length = 8
-}
-
-
-# resource "random_password" "password1" {
-#   length      = 20
-#   min_lower   = 1
-#   min_upper   = 1
-#   min_numeric = 1
-#   min_special = 1
-#   special     = true
-# }
-
-
-# resource "random_pet" "prefix" {
-#   prefix = var.prefix
-#   length = 1
-# }
